@@ -6,20 +6,20 @@ services:
     container_name: frontend
     ports:
       - "8080:80"
-    depends_on:
-      - backend
+    # depends_on:
+    #   - backend
     networks:
       - app-network
 
-  backend:
-    build: ./backend
-    container_name: backend
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./backend:/app 
-    networks:
-      - app-network
+  # backend:
+  #   build: ./backend
+  #   container_name: backend
+  #   ports:
+  #     - "8002:8002"
+  #   volumes:
+  #     - ./backend:/app 
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:

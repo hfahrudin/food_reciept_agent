@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐱 Pawcha - Taking a Look at Your Food Receipts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        #output {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 100%;
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>🐱 Pawcha - Taking a Look at Your Food Receipts</h1>
+        <h4>Question</h4>
+        <input type="text" id="question" style="width: 100%; padding: 10px;">
+        <h4>Conversation Box</h4>
+        <div id="output"></div>
+        <button id="send-message">Send Message</button>
+    </div>
+    <form id="pawcha-form" style="margin-top: 20px;">
+        <h4>Upload Receipt Image (JPG only):</h4>
+        <input type="file" id="upload-file" name="receipt" accept=".jpg, .jpeg">
+        <h4>Select Date:</h4>
+        <input type="date" id="receipt-date" name="receipt-date">
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        // Initialize chat history with the assistant's initial message
+        let chatHistory = [
+            {
+                "role": "assistant",
+                "content": "Hi, how can I help you?"
+            }
+        ];
+        let chatHistoryFull = chatHistory.slice();
+
+        // Display the chat history on page load
+        window.onload = function() {
+            displayChat();
+        };
+
+        document.getElementById('send-message').addEventListener('click', () => {
+            const output = document.getElementById('output');
+            const question = document.getElementById('question').value;
+
+            if (question.trim() === "") return;  // Ignore empty input
+
+            // Clear question input and add question to chat history
+            document.getElementById('question').value = '';
+            chatHistory.push({ "role": "user", "content": question });
+            chatHistoryFull.push({ "role": "user", "content": question });
+            displayChat();
+
+            fetch("http://localhost:8002/api/v2/stream", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ "query": question, "chat_history": chatHistory })
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantResponse = ''; // Collect the assistant's response
+
+                // Display assistant's label with a dedicated container for the streaming response
+                const assistantMessage = document.createElement('p');
+                assistantMessage.innerHTML = `<strong>Pawcha:</strong> <span id="assistant-response"></span>`;
+                output.appendChild(assistantMessage);
+                const responseContainer = document.getElementById('assistant-response');
+                output.scrollTop = output.scrollHeight;
+
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            // Once streaming is complete, add the assistant's response to the chat history
+                            const truncatedResponse = assistantResponse.split("Below resources might be useful")[0];
+                            chatHistory.push({ "role": "assistant", "content": truncatedResponse });
+                            chatHistoryFull.push({ "role": "assistant", "content": assistantResponse });
+                            displayChat();
+                            return;
+                        }
+                        const chunk = decoder.decode(value, { stream: true });
+                        const formattedChunk = formatText(chunk); 
+                        assistantResponse += chunk; // Build the assistant's response
+                        responseContainer.innerHTML += formattedChunk; 
+                        output.scrollTop = output.scrollHeight; 
+                        readStream(); 
+                    });
+                }
+
+                readStream();
+            }).catch(err => {
+                console.error("Stream error:", err);
+            });
+        });
+
+        // Display chat history in the output div
+        function displayChat() {
+            const output = document.getElementById('output');
+            output.innerHTML = chatHistoryFull.map(entry => {
+                const role = entry.role === "user" ? "User" : "Pawcha";
+                return `<p><strong>${role}:</strong> ${formatText(entry.content)}</p>`;
+            }).join('');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Format text with bold and code elements
+        function formatText(text) {
+            const boldedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+            const formattedCode = boldedText.replace(/```(.*?)```/gs, "<pre><code>$1</code></pre>");
+            return formattedCode.replace(/\n/g, "<br>");
+        }
+
+    const fileNameDisplay = document.getElementById('file-name');
+    document.getElementById('pawcha-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Form submitted!');
+    });
+    </script>
+</body>
+</html>
