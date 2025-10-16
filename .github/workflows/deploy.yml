@@ -3,7 +3,7 @@ name: Deploy FastAPI to Server
 on:
   push:
     branches:
-      - development
+      - main
 
 jobs:
   deploy:

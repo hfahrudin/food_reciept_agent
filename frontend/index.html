@@ -34,9 +34,9 @@
     </div>
     <form id="pawcha-form" style="margin-top: 20px;">
         <h4>Upload Receipt Image (JPG only):</h4>
-        <input type="file" id="upload-file" name="receipt" accept=".jpg, .jpeg">
+        <input type="file" id="upload-file" name="file" accept=".jpg, .jpeg">
         <h4>Select Date:</h4>
-        <input type="date" id="receipt-date" name="receipt-date">
+        <input type="date" id="date" name="date">
         <br><br>
         <button type="submit">Submit</button>
     </form>
@@ -129,9 +129,31 @@
         }
 
     const fileNameDisplay = document.getElementById('file-name');
-    document.getElementById('pawcha-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Form submitted!');
+    document.getElementById('pawcha-form').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent default form submission
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('http://localhost:8002/receipt/add', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                alert('Error: ' + text);
+                return;
+            }
+
+            const text = await response.text();
+            alert('Success: ' + text);
+            form.reset(); // Optional: clear the form
+        } catch (err) {
+            console.error(err);
+            alert('Failed to submit form.');
+        }
     });
     </script>
 </body>

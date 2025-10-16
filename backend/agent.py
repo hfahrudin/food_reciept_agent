@@ -1,4 +1,4 @@
 
 class AgentPawcha():
-    def __init__(self): 
-        pass
+    def __init__(self, reciept_db):
+        self.reciept_db = reciept_db 

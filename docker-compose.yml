@@ -11,15 +11,17 @@ services:
     networks:
       - app-network
 
-  # backend:
-  #   build: ./backend
-  #   container_name: backend
-  #   ports:
-  #     - "8002:8002"
-  #   volumes:
-  #     - ./backend:/app 
-  #   networks:
-  #     - app-network
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./backend:/app 
+    networks:
+      - app-network
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}  # Passing OPENAI_API_KEY env variable
 
 networks:
   app-network:

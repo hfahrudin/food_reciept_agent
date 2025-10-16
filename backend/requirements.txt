@@ -1,3 +1,5 @@
 fastapi
 uvicorn
 dotenv
+receipt-ocr
+python-multipart

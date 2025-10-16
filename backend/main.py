@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request,  File, UploadFile, Fo
+from fastapi import FastAPI, Request,  File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from dotenv import load_dotenv
@@ -10,8 +10,9 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(redirect_slashes=False)
 
-agent_pawcha = AgentPawcha()
-receipt_db = ReceiptDB()
+receipt_db = ReceiptDB("media/receipts.db")
+
+agent_pawcha = AgentPawcha(reciept_db = receipt_db)
 
 # Ensure the upload directory exists
 UPLOAD_DIR = "uploads"
@@ -38,7 +39,7 @@ async def stream(request: Request):
 
 
 @app.post("/receipt/add")
-async def add_receipt(file: UploadFile = File(...)):
+async def add_receipt(file: UploadFile = File(...), date: str = Form(...)):
     # Only accept images
     if not file.content_type.startswith("image/"):
         return PlainTextResponse(content="Invalid file type", status_code=400)
@@ -47,5 +48,12 @@ async def add_receipt(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    
-    return PlainTextResponse(content="Healthy", status_code=200)
+
+    try:
+        receipt_db.add(date=date, image_path=file_path)
+    except ValueError as e:
+        os.remove(file_path)  # cleanup
+        return PlainTextResponse(content=f"{str(e)}", status_code=400)
+
+    os.remove(file_path)  # cleanup
+    return PlainTextResponse(content="Receipt processed and saved", status_code=200)
