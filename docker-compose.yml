@@ -11,6 +11,7 @@ services:
     networks:
       - app-network
 
+
   backend:
     build: ./backend
     container_name: backend
