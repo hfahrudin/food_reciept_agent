@@ -18,7 +18,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}       # Server IP
           username: ${{ secrets.SSH_USER }}   # e.g., 'ubuntu'
-          key: ${{ secrets.DEPLOY_KEY }}         # Private key
+          key: ${{ secrets.SSH_KEY }}         # Private key
           script: |
             # Navigate directly to the project repository on the server
             cd food_reciept_agent
