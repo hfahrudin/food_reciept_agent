@@ -4,15 +4,12 @@ FROM python:3.11-slim
 # Set working directory inside the container
 WORKDIR /app
 
-# Install system dependencies safely
+# Install essential system packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        gcc-14 \
-        g++-14 \
-        make \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
