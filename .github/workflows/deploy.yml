@@ -1,4 +1,4 @@
-name: Deploy FastAPI to Server
+name: Deploy PAWCHA FE BE on Server
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
             cd food_reciept_agent
 
             # Pull the latest code
-            git pull origin development
+            git pull origin main
 
             # Rebuild and restart Docker Compose
             docker-compose down
