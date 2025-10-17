@@ -67,47 +67,32 @@
             chatHistory.push({ "role": "user", "content": question });
             chatHistoryFull.push({ "role": "user", "content": question });
             displayChat();
-
-            fetch("http://52.78.202.26:8002/api/v2/stream", {
+            fetch("http://52.78.202.26:8002/invoke", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ "query": question, "chat_history": chatHistory })
-            }).then(response => {
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let assistantResponse = ''; // Collect the assistant's response
+            })
+            .then(response => response.json())  // receive full response as JSON
+            .then(data => {
+                const assistantResponse = data.content; // full text
 
-                // Display assistant's label with a dedicated container for the streaming response
+                // Add to chat history
+                const truncatedResponse = assistantResponse.split("Below resources might be useful")[0];
+                chatHistory.push({ "role": "assistant", "content": truncatedResponse });
+                chatHistoryFull.push({ "role": "assistant", "content": assistantResponse });
+
+                // Display in the UI
                 const assistantMessage = document.createElement('p');
-                assistantMessage.innerHTML = `<strong>Pawcha:</strong> <span id="assistant-response"></span>`;
+                assistantMessage.innerHTML = `<strong>Pawcha:</strong> ${assistantResponse}`;
                 output.appendChild(assistantMessage);
-                const responseContainer = document.getElementById('assistant-response');
                 output.scrollTop = output.scrollHeight;
 
-                function readStream() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            // Once streaming is complete, add the assistant's response to the chat history
-                            const truncatedResponse = assistantResponse.split("Below resources might be useful")[0];
-                            chatHistory.push({ "role": "assistant", "content": truncatedResponse });
-                            chatHistoryFull.push({ "role": "assistant", "content": assistantResponse });
-                            displayChat();
-                            return;
-                        }
-                        const chunk = decoder.decode(value, { stream: true });
-                        const formattedChunk = formatText(chunk); 
-                        assistantResponse += chunk; // Build the assistant's response
-                        responseContainer.innerHTML += formattedChunk; 
-                        output.scrollTop = output.scrollHeight; 
-                        readStream(); 
-                    });
-                }
-
-                readStream();
-            }).catch(err => {
-                console.error("Stream error:", err);
+                displayChat();
+            })
+            .catch(err => {
+                console.error("Error fetching assistant response:", err);
             });
         });
 

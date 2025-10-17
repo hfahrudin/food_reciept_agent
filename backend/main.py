@@ -4,6 +4,9 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from dotenv import load_dotenv
 from agent import AgentPawcha
 from tools import ReceiptDB
+from pydantic import BaseModel
+from typing import List, Dict
+
 import os
 load_dotenv()
 
@@ -28,14 +31,25 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    chat_history: List[ChatMessage]
+
 # Health check route
 @app.get("/")
 def read_root():
     return PlainTextResponse(content="Healthy", status_code=200)
 
-@app.post("/chat")
-async def stream(request: Request):
-    return StreamingResponse((), media_type="text/event-stream")
+@app.post("/invoke")
+async def chat_endpoint(request: ChatRequest):
+    chat_history = request.chat_history
+    messages = [{"role": msg.role, "content": msg.content} for msg in chat_history]
+    result = agent_pawcha.invoke(messages)
+    return result
 
 
 @app.post("/receipt/add")

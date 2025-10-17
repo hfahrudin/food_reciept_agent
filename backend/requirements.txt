@@ -3,3 +3,6 @@ uvicorn
 dotenv
 receipt-ocr
 python-multipart
+langchain
+langgraph
+langchain_openai

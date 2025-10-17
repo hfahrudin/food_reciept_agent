@@ -4,3 +4,4 @@
 __pycache__
 backend/media/*
 backend/uploads/*
+*.ipynb
